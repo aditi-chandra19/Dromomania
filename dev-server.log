@@ -1,0 +1,36 @@
+
+> dromomania@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://10.175.116.111:3000
+- Environments: .env.local, .env
+✓ Ready in 1641ms
+
+○ Compiling / ...
+ GET / 200 in 5.9s (next.js: 5.1s, application-code: 760ms)
+ GET /plan-trip 200 in 1807ms (next.js: 1585ms, application-code: 222ms)
+[next-auth][warn][NEXTAUTH_URL] 
+https://next-auth.js.org/warnings#nextauth_url
+[next-auth][warn][NO_SECRET] 
+https://next-auth.js.org/warnings#no_secret
+ GET /dashboard 200 in 1664ms (next.js: 1405ms, application-code: 260ms)
+ GET / 200 in 359ms (next.js: 42ms, application-code: 317ms)
+ GET / 200 in 158ms (next.js: 15ms, application-code: 143ms)
+ GET /plan-trip 200 in 74ms (next.js: 18ms, application-code: 56ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+○ Compiling /api/plan-trip ...
+ POST /api/plan-trip 200 in 66s (next.js: 38.4s, application-code: 28.0s)
+ POST /api/plan-trip 200 in 19.7s (next.js: 9ms, application-code: 19.7s)
+✓ Compiled in 280ms
+ GET /plan-trip 200 in 2.4s (next.js: 1063ms, application-code: 1351ms)
+ GET / 200 in 2.5s (next.js: 690ms, application-code: 1823ms)
+ GET / 200 in 1078ms (next.js: 122ms, application-code: 956ms)
+ GET /plan-trip 200 in 1053ms (next.js: 403ms, application-code: 650ms)
+ GET / 200 in 561ms (next.js: 51ms, application-code: 509ms)
+ GET /plan-trip 200 in 362ms (next.js: 51ms, application-code: 311ms)
+✓ Compiled in 37ms
+ GET /plan-trip 200 in 3.8s (next.js: 22ms, application-code: 3.8s)
+✓ Compiled in 31ms
+ GET /plan-trip 200 in 859ms (next.js: 125ms, application-code: 735ms)

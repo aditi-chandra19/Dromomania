@@ -11,6 +11,11 @@ import {
 import { z } from "zod";
 
 import { searchTravelWeb } from "@/lib/agent/tools";
+import {
+  itineraryDaySchema,
+  itinerarySchema,
+  type IDay,
+} from "@/lib/itinerary";
 
 type WorkerName =
   | "hotelAgent"
@@ -23,40 +28,12 @@ type HumanReviewResumePayload = {
   feedback?: string;
 };
 
-type ItineraryDay = {
-  day: number;
-  date: string;
-  title: string;
-  summary: string;
-  hotelRecommendation: string;
-  flightPlan: string;
-  restaurants: string[];
-  attractions: string[];
-  estimatedDailyCost: number;
-  notes: string[];
-};
-
 const WORKER_NAMES: WorkerName[] = [
   "hotelAgent",
   "flightAgent",
   "restaurantAgent",
   "attractionAgent",
 ];
-
-const itineraryDaySchema = z.object({
-  day: z.number().int().positive(),
-  date: z.string(),
-  title: z.string(),
-  summary: z.string(),
-  hotelRecommendation: z.string(),
-  flightPlan: z.string(),
-  restaurants: z.array(z.string()),
-  attractions: z.array(z.string()),
-  estimatedDailyCost: z.number().nonnegative(),
-  notes: z.array(z.string()),
-});
-
-const itinerarySchema = z.array(itineraryDaySchema);
 const humanReviewResumeSchema = z.object({
   approved: z.boolean().optional(),
   feedback: z.string().trim().optional(),
@@ -103,7 +80,7 @@ const TripPlannerState = Annotation.Root({
     default: () => [],
   }),
   supervisorDecision: Annotation<string | undefined>,
-  draftItinerary: Annotation<ItineraryDay[]>({
+  draftItinerary: Annotation<IDay[]>({
     reducer: (_left, right) => right,
     default: () => [],
   }),
@@ -116,7 +93,7 @@ export type TripPlannerGraphState = typeof TripPlannerState.State;
 export type TripPlannerItineraryDay = z.infer<typeof itineraryDaySchema>;
 export type TripPlannerReviewPayload = z.infer<typeof humanReviewResumeSchema>;
 
-export { humanReviewResumeSchema, itineraryDaySchema, itinerarySchema };
+export { humanReviewResumeSchema };
 
 let geminiModel: ChatGoogleGenerativeAI | null = null;
 
@@ -359,17 +336,18 @@ async function draftAgent(state: TripPlannerGraphState) {
   }).join("\n\n");
 
   const response = await model.invoke([
-    [
-      "system",
       [
-        "You are the draftAgent for Dromomania.",
-        "Create a strict JSON array and nothing else.",
-        "Do not wrap the JSON in markdown fences.",
-        `Return exactly ${tripLength} objects, one per travel day.`,
-        "Each object must contain the keys: day, date, title, summary, hotelRecommendation, flightPlan, restaurants, attractions, estimatedDailyCost, notes.",
-        "Use only valid JSON types. estimatedDailyCost must be a number.",
-      ].join(" "),
-    ],
+        "system",
+        [
+          "You are the draftAgent for Dromomania.",
+          "Create a strict JSON array and nothing else.",
+          "Do not wrap the JSON in markdown fences.",
+          `Return exactly ${tripLength} objects, one per travel day.`,
+          "Each object must contain the keys: day, date, title, summary, hotelRecommendation, flightPlan, restaurants, attractions, estimatedDailyCost, notes.",
+          "Use only valid JSON types. estimatedDailyCost must be a number.",
+          "restaurants, attractions, and notes must always be arrays of strings, even if there is only one item.",
+        ].join(" "),
+      ],
     [
       "human",
       [
@@ -398,7 +376,7 @@ function humanReview(state: TripPlannerGraphState) {
     {
       node: "humanReview";
       instructions: string;
-      draftItinerary: ItineraryDay[];
+      draftItinerary: IDay[];
       draftItineraryJson: string | undefined;
       researchNotes: Record<string, string>;
     },

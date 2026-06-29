@@ -32,17 +32,12 @@ export default function Home() {
             </p>
 
             <div className="button-row">
-              <Link className="button button-primary" href="/api/auth/signin">
-                Start with Credentials
+              <Link className="button button-primary" href="/plan-trip">
+                Open Trip Planner
               </Link>
-              <a
-                className="button button-secondary"
-                href="https://nextjs.org/docs"
-                target="_blank"
-                rel="noreferrer"
-              >
-                View Next.js Docs
-              </a>
+              <Link className="button button-secondary" href="/dashboard">
+                View Dashboard
+              </Link>
             </div>
           </div>
 

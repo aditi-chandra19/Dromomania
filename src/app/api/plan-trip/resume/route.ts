@@ -4,10 +4,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { calculateItineraryCost, itinerarySchema } from "@/lib/itinerary";
 import { getPrisma } from "@/lib/prisma";
 import {
   humanReviewResumeSchema,
-  itinerarySchema,
   type TripPlannerGraphState,
   tripPlannerGraph,
 } from "@/lib/agent/tripPlannerGraph";
@@ -28,15 +28,6 @@ function getErrorMessage(error: unknown) {
   }
 
   return "Unexpected trip-planning resume error.";
-}
-
-function calculateTotalEstimatedCost(
-  itinerary: z.infer<typeof itinerarySchema>,
-) {
-  return itinerary.reduce(
-    (total, day) => total + day.estimatedDailyCost,
-    0,
-  );
 }
 
 export async function POST(request: Request) {
@@ -102,7 +93,7 @@ export async function POST(request: Request) {
       }
 
       const finalItinerary = draft ?? state.draftItinerary;
-      const totalEstimatedCost = calculateTotalEstimatedCost(finalItinerary);
+      const totalEstimatedCost = calculateItineraryCost(finalItinerary);
 
       await tripPlannerGraph.invoke(
         new Command({

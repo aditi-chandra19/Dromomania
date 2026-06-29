@@ -1,0 +1,246 @@
+.shell {
+  width: min(1240px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 36px 0 72px;
+}
+
+.hero,
+.authCard,
+.metricCard,
+.emptyCard,
+.tripCard {
+  border: 1px solid rgba(165, 177, 214, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+    rgba(11, 16, 34, 0.84);
+  backdrop-filter: blur(24px);
+}
+
+.hero,
+.authCard {
+  display: flex;
+  justify-content: space-between;
+  gap: 22px;
+  align-items: center;
+  border-radius: 30px;
+  padding: 28px;
+}
+
+.kicker,
+.tripLabel {
+  display: inline-block;
+  color: var(--teal);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.title,
+.authTitle,
+.tripTitle {
+  margin-top: 12px;
+  font-family: var(--font-display), sans-serif;
+  letter-spacing: -0.05em;
+}
+
+.title {
+  font-size: clamp(2.5rem, 5vw, 4.2rem);
+}
+
+.subtitle,
+.authCopy {
+  max-width: 62ch;
+  margin-top: 16px;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.heroActions,
+.authActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  border-radius: 999px;
+  padding: 0 18px;
+  font-weight: 700;
+}
+
+.primaryButton {
+  color: #07111f;
+  background: linear-gradient(135deg, rgba(159, 124, 255, 1), rgba(68, 240, 209, 0.92));
+}
+
+.secondaryButton {
+  border: 1px solid rgba(165, 177, 214, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.metricCard {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  border-radius: 24px;
+  padding: 20px;
+}
+
+.metricCard span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.metricCard strong {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.45rem;
+  letter-spacing: -0.04em;
+}
+
+.brandRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-display), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.brandMark {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(159, 124, 255, 0.95), rgba(68, 240, 209, 0.86));
+  color: #07111f;
+}
+
+.emptyCard {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  border-radius: 28px;
+  padding: 22px;
+}
+
+.emptyCard h2 {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: -0.04em;
+}
+
+.emptyCard p {
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.72;
+}
+
+.tripStack {
+  display: grid;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.tripCard {
+  border-radius: 30px;
+  padding: 22px;
+}
+
+.tripHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.tripTitle {
+  font-size: 2rem;
+}
+
+.tripMeta {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.preferenceRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.preferenceChip {
+  display: inline-flex;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(68, 240, 209, 0.08);
+  color: #dcfff7;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 920px) {
+  .hero,
+  .authCard,
+  .emptyCard,
+  .tripHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .metricGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .tripMeta {
+    text-align: left;
+  }
+}
+
+@media (max-width: 720px) {
+  .shell {
+    width: min(100vw - 20px, 1240px);
+    padding-top: 22px;
+    padding-bottom: 42px;
+  }
+
+  .hero,
+  .authCard,
+  .tripCard,
+  .emptyCard {
+    border-radius: 24px;
+    padding: 18px;
+  }
+
+  .heroActions,
+  .authActions {
+    width: 100%;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+  }
+}
