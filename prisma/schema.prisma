@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  trips     Trip[]
+}
+
+model Trip {
+  id                 String     @id @default(cuid())
+  userId             String
+  destination        String
+  budget             Float
+  currency           String
+  startDate          DateTime
+  endDate            DateTime
+  preferences        String?
+  itinerary          String?
+  status             TripStatus @default(DRAFT)
+  totalEstimatedCost Float
+  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum TripStatus {
+  DRAFT
+  FINALIZED
+}
