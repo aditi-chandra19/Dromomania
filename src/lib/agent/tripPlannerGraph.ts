@@ -18,6 +18,11 @@ type WorkerName =
   | "restaurantAgent"
   | "attractionAgent";
 
+type HumanReviewResumePayload = {
+  approved?: boolean;
+  feedback?: string;
+};
+
 type ItineraryDay = {
   day: number;
   date: string;
@@ -52,6 +57,10 @@ const itineraryDaySchema = z.object({
 });
 
 const itinerarySchema = z.array(itineraryDaySchema);
+const humanReviewResumeSchema = z.object({
+  approved: z.boolean().optional(),
+  feedback: z.string().trim().optional(),
+});
 
 const TripPlannerInput = Annotation.Root({
   destination: Annotation<string>,
@@ -77,7 +86,8 @@ const TripPlannerState = Annotation.Root({
   }),
   travelerContext: Annotation<string | undefined>,
   completedWorkers: Annotation<WorkerName[]>({
-    reducer: (left, right) => Array.from(new Set([...left, ...right])) as WorkerName[],
+    reducer: (left, right) =>
+      Array.from(new Set([...left, ...right])) as WorkerName[],
     default: () => [],
   }),
   researchNotes: Annotation<Record<string, string>>({
@@ -104,6 +114,9 @@ const TripPlannerState = Annotation.Root({
 export type TripPlannerRequest = typeof TripPlannerInput.State;
 export type TripPlannerGraphState = typeof TripPlannerState.State;
 export type TripPlannerItineraryDay = z.infer<typeof itineraryDaySchema>;
+export type TripPlannerReviewPayload = z.infer<typeof humanReviewResumeSchema>;
+
+export { humanReviewResumeSchema, itineraryDaySchema, itinerarySchema };
 
 let geminiModel: ChatGoogleGenerativeAI | null = null;
 
@@ -188,7 +201,7 @@ function buildWorkerQuery(workerName: WorkerName, state: TripPlannerGraphState) 
     case "attractionAgent":
       return [
         `Top attractions, neighborhoods, and experience ideas in ${state.destination}.`,
-        "Highlight can’t-miss stops, pacing tips, and good activity groupings for a multi-day trip.",
+        "Highlight can't-miss stops, pacing tips, and good activity groupings for a multi-day trip.",
         tripSummary,
       ].join("\n");
   }
@@ -309,7 +322,8 @@ function calculateTripLength(startDate: string, endDate: string) {
   const start = new Date(startDate);
   const end = new Date(endDate);
   const millisecondsPerDay = 1000 * 60 * 60 * 24;
-  const rawDays = Math.floor((end.getTime() - start.getTime()) / millisecondsPerDay) + 1;
+  const rawDays =
+    Math.floor((end.getTime() - start.getTime()) / millisecondsPerDay) + 1;
 
   return Number.isFinite(rawDays) && rawDays > 0 ? rawDays : 1;
 }
@@ -327,6 +341,13 @@ function stripCodeFences(text: string) {
 async function draftAgent(state: TripPlannerGraphState) {
   const model = getGeminiModel();
   const tripLength = calculateTripLength(state.startDate, state.endDate);
+  const revisionRequest = state.humanFeedback
+    ? [
+        "Human revision feedback to incorporate:",
+        state.humanFeedback,
+        "Revise the itinerary accordingly while keeping the response as a strict JSON array.",
+      ].join("\n")
+    : "";
   const researchBundle = WORKER_NAMES.map((workerName) => {
     const note = state.researchNotes[workerName] ?? "No research available.";
     const sources = state.researchSources[workerName] ?? [];
@@ -354,9 +375,12 @@ async function draftAgent(state: TripPlannerGraphState) {
       [
         buildTripSummary(state),
         `Trip length in days: ${tripLength}`,
+        revisionRequest,
         "Worker research:",
         researchBundle,
-      ].join("\n\n"),
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
     ],
   ]);
 
@@ -370,7 +394,16 @@ async function draftAgent(state: TripPlannerGraphState) {
 }
 
 function humanReview(state: TripPlannerGraphState) {
-  const feedback = interrupt({
+  const resumePayload = interrupt<
+    {
+      node: "humanReview";
+      instructions: string;
+      draftItinerary: ItineraryDay[];
+      draftItineraryJson: string | undefined;
+      researchNotes: Record<string, string>;
+    },
+    HumanReviewResumePayload | string
+  >({
     node: "humanReview",
     instructions:
       "Review the draft itinerary. Resume the graph with feedback text or an approval note.",
@@ -379,10 +412,30 @@ function humanReview(state: TripPlannerGraphState) {
     researchNotes: state.researchNotes,
   });
 
-  return {
-    humanFeedback:
-      typeof feedback === "string" ? feedback : JSON.stringify(feedback),
-  };
+  const parsedPayload =
+    typeof resumePayload === "string"
+      ? {
+          approved: false,
+          feedback: resumePayload,
+        }
+      : humanReviewResumeSchema.parse(resumePayload);
+
+  if (parsedPayload.approved) {
+    return new Command({
+      update: {
+        humanFeedback: parsedPayload.feedback,
+      },
+      goto: END,
+    });
+  }
+
+  return new Command({
+    update: {
+      humanFeedback:
+        parsedPayload.feedback ?? "Please revise the itinerary based on my review.",
+    },
+    goto: "draftAgent",
+  });
 }
 
 const tripPlannerBuilder = new StateGraph({
@@ -390,13 +443,17 @@ const tripPlannerBuilder = new StateGraph({
   input: TripPlannerInput,
   output: TripPlannerState,
 })
-  .addNode("supervisorAgent", supervisorAgent)
+  .addNode("supervisorAgent", supervisorAgent, {
+    ends: [...WORKER_NAMES, "draftAgent"],
+  })
   .addNode("hotelAgent", hotelAgent)
   .addNode("flightAgent", flightAgent)
   .addNode("restaurantAgent", restaurantAgent)
   .addNode("attractionAgent", attractionAgent)
   .addNode("draftAgent", draftAgent)
-  .addNode("humanReview", humanReview)
+  .addNode("humanReview", humanReview, {
+    ends: ["draftAgent", END],
+  })
   .addEdge(START, "supervisorAgent")
   .addEdge(WORKER_NAMES, "supervisorAgent")
   .addEdge("draftAgent", "humanReview")
@@ -408,4 +465,3 @@ export const tripPlannerGraph = tripPlannerBuilder.compile({
   description:
     "Parallel trip-planning graph with deterministic supervision, Tavily-first research, Gemini drafting, and human review pause.",
 });
-
